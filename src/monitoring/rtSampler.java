@@ -9,13 +9,14 @@ import net.spy.memcached.MemcachedClient;
 
 public class rtSampler implements Runnable {
 
-	private ConcurrentLinkedQueue<rtSample> rt = null;
+	//private ConcurrentLinkedQueue<rtSample> rt = null;
 	private MemcachedClient memcachedClient = null;
 	private String monirotHost = null;
 	private String name = null;
+	private BatchMeans bmRT = new BatchMeans(30);
 
 	public rtSampler(String monirotHost, String name) {
-		this.rt = new ConcurrentLinkedQueue<rtSample>();
+		//this.rt = new ConcurrentLinkedQueue<rtSample>();
 		this.monirotHost = monirotHost;
 		this.name = name;
 		try {
@@ -27,8 +28,22 @@ public class rtSampler implements Runnable {
 
 	@Override
 	public void run() {
-		rtSample[] samples = this.rt.toArray(new rtSample[0]);
-		this.saveRT(samples);
+		//rtSample[] samples = this.rt.toArray(new rtSample[0]);
+		//this.saveRT(samples);
+		this.saveRTBM();
+	}
+	
+	private void saveRTBM() {
+		bmRT.updateStats();
+		try {
+			this.memcachedClient.set("rt_"+this.name, 3600, String.valueOf(bmRT.mean)).get();
+			this.memcachedClient.set("lowCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[0])).get();
+			this.memcachedClient.set("upCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[1])).get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void saveRT(rtSample[] samples) {
@@ -55,7 +70,8 @@ public class rtSampler implements Runnable {
 	}
 
 	public void addSample(rtSample sample) {
-		this.rt.add(sample);
+		//this.rt.add(sample);
+		this.bmRT.add(sample.getRT());
 	}
 
 }
