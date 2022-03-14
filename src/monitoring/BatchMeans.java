@@ -30,6 +30,7 @@ public class BatchMeans {
 			long lastBatchMean = lastBatchSum/this.batchSize;
 			this.meanOfBatch.addValue(lastBatchMean);
 		}
+		System.out.println("B "+samples.size()+" - "+samples.get(samples.size()-1).size());
 	}
 	
 	public void updateStats() {
