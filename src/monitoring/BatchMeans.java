@@ -12,6 +12,7 @@ public class BatchMeans {
 	protected int lastBatchLen = 0;
 	public int totalNumCompletedBatches = 0;
 	protected final SummaryStatistics meanOfBatch = new SummaryStatistics(); //skip first batch
+	protected long lastMOB_N = -1;
 	public final int batchSize;
 	public double mean = Double.NaN;
 	public double[] CI = {Double.NaN, Double.NaN};
@@ -48,20 +49,23 @@ public class BatchMeans {
 	}
 	
 	private void computeCI() {
-		if(this.meanOfBatch.getN()>=2) {
-			// see https://gist.github.com/gcardone/5536578
-			long df = this.meanOfBatch.getN()-1;
-			TDistribution tDist = new TDistribution(df);
-			double critVal = tDist.inverseCumulativeProbability(1.0 - (1 - confLvl) / 2);
-			double ciWidth = critVal * this.meanOfBatch.getStandardDeviation() / Math.sqrt(this.meanOfBatch.getN());
-			double mean = this.meanOfBatch.getMean();
-			double lowCi = this.meanOfBatch.getMean() - ciWidth;
-			double upCi = this.meanOfBatch.getMean() + ciWidth;
-			this.mean = mean;
-			this.CI = new double[]{lowCi, upCi};
-		} else {
-			this.mean = Double.NaN;
-			this.CI = new double[]{Double.NaN, Double.NaN};
+		if(this.lastMOB_N != this.meanOfBatch.getN()) {
+			this.lastMOB_N = this.meanOfBatch.getN();
+			if(this.meanOfBatch.getN()>=2) {
+				// see https://gist.github.com/gcardone/5536578
+				long df = this.meanOfBatch.getN()-1;
+				TDistribution tDist = new TDistribution(df);
+				double critVal = tDist.inverseCumulativeProbability(1.0 - (1 - confLvl) / 2);
+				double ciWidth = critVal * this.meanOfBatch.getStandardDeviation() / Math.sqrt(this.meanOfBatch.getN());
+				double mean = this.meanOfBatch.getMean();
+				double lowCi = this.meanOfBatch.getMean() - ciWidth;
+				double upCi = this.meanOfBatch.getMean() + ciWidth;
+				this.mean = mean;
+				this.CI = new double[]{lowCi, upCi};
+			} else {
+				this.mean = Double.NaN;
+				this.CI = new double[]{Double.NaN, Double.NaN};
+			}
 		}
 	}
 	
