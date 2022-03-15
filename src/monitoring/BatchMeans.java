@@ -1,39 +1,53 @@
 package monitoring;
 
 import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 public class BatchMeans {
-	protected final ArrayList<ArrayList<Long>> samples = new ArrayList<>();
-	protected long lastBatchSum = 0;
+	protected final LinkedBlockingQueue<Double> unprocessedSamples = new LinkedBlockingQueue<>();
+	protected double lastBatchSum = 0;
+	protected int lastBatchLen = 0;
+	public int totalNumCompletedBatches = 0;
 	protected final SummaryStatistics meanOfBatch = new SummaryStatistics(); //skip first batch
 	public final int batchSize;
 	public double mean = Double.NaN;
 	public double[] CI = {Double.NaN, Double.NaN};
 	
-	public double confLvl = 0.99;
+	public double confLvl = 0.95;
 	
 	public BatchMeans(int batchSize) {
 		this.batchSize = batchSize;
 	}
 	
-	public void add(long x) {
-		if(samples.size() == 0 || samples.get(samples.size()-1).size() == this.batchSize) {
-			samples.add(new ArrayList<>());
-			lastBatchSum = 0;
-		}
-		samples.get(samples.size()-1).add(x);
-		lastBatchSum += x;
-		if(samples.get(samples.size()-1).size() == this.batchSize && samples.size()>=2) {
-			long lastBatchMean = lastBatchSum/this.batchSize;
-			this.meanOfBatch.addValue(lastBatchMean);
-		}
-		System.out.println("B "+samples.size()+" - "+samples.get(samples.size()-1).size()+" x "+x);
+	public void add(double x) {
+		unprocessedSamples.add(x);
 	}
 	
-	public void updateStats() {
+	private void processSamples() {
+		ArrayList<Double> newSamples = new ArrayList<>();
+		this.unprocessedSamples.drainTo(newSamples);
+		
+		for(double x : newSamples) {
+			this.lastBatchSum += x;
+			this.lastBatchLen++;
+			if(this.lastBatchLen == this.batchSize) {
+				if(this.totalNumCompletedBatches > 0) {
+					double lastBatchMean = this.lastBatchSum/this.batchSize;
+					this.meanOfBatch.addValue(lastBatchMean);
+				}
+				this.lastBatchSum = 0;
+				this.lastBatchLen = 0;
+				this.totalNumCompletedBatches++;
+			}
+		}
+		
+		//System.out.println("B "+this.totalNumCompletedBatches+" + "+this.lastBatchLen+" x "+x);
+	}
+	
+	private void computeCI() {
 		if(this.meanOfBatch.getN()>=2) {
 			// see https://gist.github.com/gcardone/5536578
 			long df = this.meanOfBatch.getN()-1;
@@ -49,5 +63,10 @@ public class BatchMeans {
 			this.mean = Double.NaN;
 			this.CI = new double[]{Double.NaN, Double.NaN};
 		}
+	}
+	
+	public synchronized void updateStats() {
+		this.processSamples();
+		this.computeCI();
 	}
 }
