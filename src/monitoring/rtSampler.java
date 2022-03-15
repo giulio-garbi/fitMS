@@ -39,6 +39,7 @@ public class rtSampler implements Runnable {
 			this.memcachedClient.set("rt_"+this.name, 3600, String.valueOf(bmRT.mean)).get();
 			this.memcachedClient.set("lowCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[0])).get();
 			this.memcachedClient.set("upCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[1])).get();
+			this.memcachedClient.set("batches_rt_"+this.name, 3600, String.valueOf(bmRT.totalNumCompletedBatches)).get();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
