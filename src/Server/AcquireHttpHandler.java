@@ -15,6 +15,8 @@ import memcachedPool.PooledMemcachedClient;
 import net.spy.memcached.MemcachedClient;
 
 public class AcquireHttpHandler implements HttpHandler {
+	
+	private static final boolean QLENS_ENABLED = false;
 
 	private SimpleTask task = null;
 	HttpExchange req = null;
@@ -26,7 +28,7 @@ public class AcquireHttpHandler implements HttpHandler {
 		this.task = task;
 		this.backlog = new ArrayList<Runnable>();
 		this.rnd = ThreadLocalRandom.current();
-		this.memcachedClient=this.task.getMemcachedPool().getConnection();
+		this.memcachedClient=QLENS_ENABLED?this.task.getMemcachedPool().getConnection():null;
 	}
 
 //	public void measure(String entry, String snd) {
@@ -46,19 +48,21 @@ public class AcquireHttpHandler implements HttpHandler {
 //	}
 
 	public void measure(String entry, String snd) {
-		try {
-			if (snd.equals("think")) {
-				// this.memcachedClient.decr("think", 1);
-				MCAtomicUpdater.AtomicIncr(this.memcachedClient, -1, "think", 100);
-			} else {
-				// this.memcachedClient.decr(String.format("%s_ex", snd), 1);
-				MCAtomicUpdater.AtomicIncr(this.memcachedClient, -1, String.format("%s_ex", snd), 100);
+		if(QLENS_ENABLED) {
+			try {
+				if (snd.equals("think")) {
+					// this.memcachedClient.decr("think", 1);
+					MCAtomicUpdater.AtomicIncr(this.memcachedClient, -1, "think", 100);
+				} else {
+					// this.memcachedClient.decr(String.format("%s_ex", snd), 1);
+					MCAtomicUpdater.AtomicIncr(this.memcachedClient, -1, String.format("%s_ex", snd), 100);
+				}
+				// this.memcachedClient.incr(String.format("%s_bl", entry), 1);
+				MCAtomicUpdater.AtomicIncr(this.memcachedClient, 1, String.format("%s_bl", entry), 100);
+	
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			// this.memcachedClient.incr(String.format("%s_bl", entry), 1);
-			MCAtomicUpdater.AtomicIncr(this.memcachedClient, 1, String.format("%s_bl", entry), 100);
-
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -106,7 +110,9 @@ public class AcquireHttpHandler implements HttpHandler {
 				| IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
 		}finally {
-			this.memcachedClient.close();
+			if(QLENS_ENABLED) {
+				this.memcachedClient.close();
+			}
 		}
 	}
 
