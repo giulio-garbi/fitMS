@@ -14,6 +14,7 @@ public class rtSampler implements Runnable {
 	private String monirotHost = null;
 	private String name = null;
 	private BatchMeans bmRT = new BatchMeans(30);
+	private ThrBatchMeans bmThr = new ThrBatchMeans(30, 0.1);
 
 	public rtSampler(String monirotHost, String name) {
 		//this.rt = new ConcurrentLinkedQueue<rtSample>();
@@ -30,16 +31,21 @@ public class rtSampler implements Runnable {
 	public void run() {
 		//rtSample[] samples = this.rt.toArray(new rtSample[0]);
 		//this.saveRT(samples);
-		this.saveRTBM();
+		this.saveBM();
 	}
 	
-	private void saveRTBM() {
+	private void saveBM() {
 		bmRT.updateStats();
+		bmThr.updateStats();
 		try {
 			this.memcachedClient.set("rt_"+this.name, 3600, String.valueOf(bmRT.mean)).get();
 			this.memcachedClient.set("lowCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[0])).get();
 			this.memcachedClient.set("upCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[1])).get();
 			this.memcachedClient.set("batches_rt_"+this.name, 3600, String.valueOf(bmRT.totalNumCompletedBatches)).get();
+			this.memcachedClient.set("thr_"+this.name, 3600, String.valueOf(bmThr.thr.mean)).get();
+			this.memcachedClient.set("lowCI_thr_"+this.name, 3600, String.valueOf(bmThr.thr.CI[0])).get();
+			this.memcachedClient.set("upCI_thr_"+this.name, 3600, String.valueOf(bmThr.thr.CI[1])).get();
+			this.memcachedClient.set("batches_thr_"+this.name, 3600, String.valueOf(bmThr.thr.totalNumCompletedBatches)).get();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -73,6 +79,7 @@ public class rtSampler implements Runnable {
 	public void addSample(rtSample sample) {
 		//this.rt.add(sample);
 		this.bmRT.add(sample.getRT());
+		this.bmThr.add(sample.getEnd());
 	}
 
 }
