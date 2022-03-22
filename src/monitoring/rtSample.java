@@ -17,6 +17,10 @@ public class rtSample {
 		this.start = start;
 	}
 	
+	public double getEndSec() {
+		return this.end/1_000_000_000.0;
+	}
+	
 	public Long getEnd() {
 		return this.end;
 	}
