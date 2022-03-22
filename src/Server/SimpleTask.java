@@ -28,7 +28,6 @@ import adaptationHandler.AdaptationHandler2;
 import memcachedPool.memcachedPool;
 import monitoring.rtSampler;
 
-@SuppressWarnings("restriction")
 public class SimpleTask {
 
 	private Integer port = null;
@@ -60,7 +59,8 @@ public class SimpleTask {
 	ConcurrentLinkedQueue<Integer> tids = null;
 
 	private HashMap<String, Long> enqueueTime = null;
-	rtSampler rts = null;
+	//rtSampler rts = null;
+	HashMap<String, rtSampler> rtss = new HashMap<>();
 
 	public SimpleTask(String address, int port, HashMap<String, Class> entries, HashMap<String, Long> sTimes, int tsize,
 			boolean isEmulated, String name, String jedisHost, long aHperiod) {
@@ -90,8 +90,11 @@ public class SimpleTask {
 		this.initState();
 
 		ScheduledExecutorService se = Executors.newSingleThreadScheduledExecutor();
-		this.rts = new rtSampler(this.jedisHost, this.getName());
-		se.scheduleAtFixedRate(rts, 0, 100, TimeUnit.MILLISECONDS);
+		for(String ent:entries.keySet()) {
+			rtSampler rts = new rtSampler(this.jedisHost, this.getName()+"_"+ent);
+			this.rtss.put(ent, rts);
+			se.scheduleAtFixedRate(rts, 0, 100, TimeUnit.MILLISECONDS);
+		}
 	}
 
 	public SimpleTask(HashMap<String, Class> entries, HashMap<String, Long> sTimes, int tsize, String name,
@@ -357,12 +360,12 @@ public class SimpleTask {
 		this.state = state;
 	}
 
-	public rtSampler getRts() {
-		return rts;
+	public rtSampler getRts(String entry) {
+		return rtss.get(entry);
 	}
 
-	public void setRts(rtSampler rts) {
-		this.rts = rts;
+	public void setRts(String entry, rtSampler rts) {
+		this.rtss.put(entry, rts);
 	}
 
 	public memcachedPool getMemcachedPool() {
