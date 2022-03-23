@@ -80,11 +80,11 @@ public class AcquireHttpHandler implements HttpHandler {
 		try {
 			Constructor<? extends Runnable> c = null;
 			if (this.task.getEntries().get(params.get("entry")) == null) {
-				SimpleTask.getLogger().error(String.format("No class registered for entry %s", params.get("entry")));
+				SimpleTask.getLogger().error(String.format("No class registered for entry %s at task %s", params.get("entry"), this.task.name));
 			}
 			if (this.task.getsTimes().get(params.get("entry")) == null) {
 				SimpleTask.getLogger()
-						.error(String.format("No service time registered for entry %s", params.get("entry")));
+						.error(String.format("No service time registered for entry %s at task %s", params.get("entry"), this.task.name));
 			}
 			// System.out.println(this.task.getEntries().get(params.get("entry")));
 			c = this.task.getEntries().get(params.get("entry")).getDeclaredConstructor(SimpleTask.class,
