@@ -38,7 +38,6 @@ public class rtSampler implements Runnable {
 		bmRT.updateStats();
 		bmThr.updateStats();
 		try {
-			System.out.println(this.name+" is writing");
 			this.memcachedClient.set("rt_"+this.name, 3600, String.valueOf(bmRT.mean)).get();
 			this.memcachedClient.set("lowCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[0])).get();
 			this.memcachedClient.set("upCI_rt_"+this.name, 3600, String.valueOf(bmRT.CI[1])).get();
@@ -52,7 +51,6 @@ public class rtSampler implements Runnable {
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
-		System.out.println(this.name+" wrote");
 	}
 
 	public void addSample(rtSample sample) {
