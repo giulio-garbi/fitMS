@@ -52,6 +52,7 @@ public class rtSampler implements Runnable {
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
+		System.out.println(this.name+" wrote");
 	}
 
 	public void addSample(rtSample sample) {
