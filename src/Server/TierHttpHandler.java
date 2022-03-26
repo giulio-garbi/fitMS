@@ -15,6 +15,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.sun.net.httpserver.HttpExchange;
 
+import jni.GetThreadID;
 import memcachedPool.PooledMemcachedClient;
 import net.spy.memcached.MemcachedClient;
 import redis.clients.jedis.Jedis;
@@ -35,6 +36,22 @@ public abstract class TierHttpHandler implements Runnable {
 	private String name = null;
 	// private Jedis jedis = null;
 	private PooledMemcachedClient memcachedClient = null;
+	
+	private int NC = -1;
+	private int firstCore = 1;
+	
+	public void setNC(int NC) {
+		this.NC = NC;
+	}
+	public void setFirstCore(int firstCore) {
+		this.firstCore = firstCore;
+	}
+	public int getNC() {
+		return NC;
+	}
+	public int getFirstCore() {
+		return firstCore;
+	}
 
 	public TierHttpHandler(SimpleTask lqntask, HttpExchange req, long stime) {
 		this.setLqntask(lqntask);
@@ -93,6 +110,7 @@ public abstract class TierHttpHandler implements Runnable {
 
 	@Override
 	public void run() {
+		updateAffinity();
 		this.mgm = ManagementFactory.getThreadMXBean();
 		if (!this.mgm.isThreadCpuTimeSupported()) {
 			System.err.println("ThreadCpuTime in not suppoted");
@@ -200,14 +218,16 @@ public abstract class TierHttpHandler implements Runnable {
 	}
 
 	public void updateAffinity() {
+		if(NC <= 0)
+			return;
 //		GetThreadID.setAffinity(this.tid, 1, this.lqntask.getHwCore());
-		String[] commands = new String[] { "taskset", "-pc", String.format("1-%d", this.lqntask.getHwCore().intValue()),
-				String.valueOf(this.tid) };
+		int tid = GetThreadID.get_tid();
+		String[] commands = new String[] { "taskset", "-pc", String.format("%d-%d", firstCore, firstCore+NC-1),
+				String.valueOf(tid) };
 		try {
 			Process p = Runtime.getRuntime().exec(commands);
 			BufferedReader is = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String line = null;
-			while ((line = is.readLine()) != null) {
+			while ((is.readLine()) != null) {
 				// System.out.println(line);
 			}
 			is.close();
