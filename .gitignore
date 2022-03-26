@@ -11,3 +11,6 @@ data
 .classpath
 .project
 .settings
+
+#ignore .so
+/jni_lib/libGetThreadID.so

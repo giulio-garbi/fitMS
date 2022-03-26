@@ -11,10 +11,12 @@ public class testJni {
 	public static void main(String[] args) {
 		int tid = GetThreadID.get_tid();
 		System.out.println("main TID=" + tid);
-		GetThreadID.setAffinity(tid, 1, 1);
+		TestOtherThr t = new TestOtherThr();
+		t.start();
+		//GetThreadID.setAffinity(tid, 1, 1);
 
-		String[] cmds = new String[] { "taskset", "-cp", String.valueOf(tid) };
-		try {
+		//String[] cmds = new String[] { "taskset", "-cp", String.valueOf(tid) };
+		/*try {
 			Process p = Runtime.getRuntime().exec(cmds);
 			BufferedReader is = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = null;
@@ -24,6 +26,13 @@ public class testJni {
 			p.destroy();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}*/
+	}
+
+	public static class TestOtherThr extends Thread {
+		public void run(){
+			int tid = GetThreadID.get_tid();
+                	System.out.println("inner TID=" + tid);
 		}
 	}
 }
