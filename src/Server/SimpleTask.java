@@ -11,7 +11,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
+//import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -89,11 +89,13 @@ public class SimpleTask {
 		}
 		this.initState();
 
-		ScheduledExecutorService se = Executors.newSingleThreadScheduledExecutor();
+		//ScheduledExecutorService se = Executors.newSingleThreadScheduledExecutor();
 		for(String ent:entries.keySet()) {
 			rtSampler rts = new rtSampler(this.jedisHost, this.getName()+"_"+ent);
 			this.rtss.put(ent, rts);
-			se.scheduleAtFixedRate(rts, 0, 100, TimeUnit.MILLISECONDS);
+			Thread th_rtss = new Thread(rts);
+			th_rtss.start();
+			//se.scheduleAtFixedRate(rts, 0, 100, TimeUnit.MILLISECONDS);
 		}
 	}
 

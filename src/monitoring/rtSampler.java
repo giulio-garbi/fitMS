@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.MemcachedClient;
 
@@ -31,7 +32,17 @@ public class rtSampler implements Runnable {
 	public void run() {
 		//rtSample[] samples = this.rt.toArray(new rtSample[0]);
 		//this.saveRT(samples);
-		this.saveBM();
+		while(true) {
+			this.saveBM();
+			while(true) {
+				try {
+					TimeUnit.MILLISECONDS.sleep(100);
+					break;
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	private void saveBM() {
