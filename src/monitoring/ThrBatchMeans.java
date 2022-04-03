@@ -32,7 +32,8 @@ public class ThrBatchMeans {
 			if(firstBlock) {
 				samples = new int[(int)((newSamples.get(newSamples.size()-1)-newSamples.get(0))/this.samplingTime)+1];
 				for(double t:newSamples) {
-					samples[(int)((t-newSamples.get(0))/this.samplingTime)]++;
+					if(t>=newSamples.get(0))
+						samples[(int)((t-newSamples.get(0))/this.samplingTime)]++;
 				}
 				lastBlockBeginsAt = newSamples.get(0) + this.samplingTime*(samples.length-1);
 				lastBlockSamples = samples[samples.length-1];
@@ -41,7 +42,8 @@ public class ThrBatchMeans {
 				samples = new int[(int)((newSamples.get(newSamples.size()-1)-lastBlockBeginsAt)/this.samplingTime)+1];
 				samples[0] = lastBlockSamples;
 				for(double t:newSamples) {
-					samples[(int)((t-lastBlockBeginsAt)/this.samplingTime)]++;
+					if(t>=lastBlockBeginsAt)
+						samples[(int)((t-lastBlockBeginsAt)/this.samplingTime)]++;
 				}
 				lastBlockBeginsAt += this.samplingTime*(samples.length-1);
 				lastBlockSamples = samples[samples.length-1];
