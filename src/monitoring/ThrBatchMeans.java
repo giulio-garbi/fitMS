@@ -41,8 +41,7 @@ public class ThrBatchMeans {
 				samples = new int[(int)((newSamples.get(newSamples.size()-1)-lastBlockBeginsAt)/this.samplingTime)+1];
 				samples[0] = lastBlockSamples;
 				for(double t:newSamples) {
-					if(t>=lastBlockBeginsAt)
-						samples[Math.max((int)((t-lastBlockBeginsAt)/this.samplingTime),0)]++;
+					samples[Math.max((int)((t-lastBlockBeginsAt)/this.samplingTime),0)]++;
 				}
 				lastBlockBeginsAt += this.samplingTime*(samples.length-1);
 				lastBlockSamples = samples[samples.length-1];
