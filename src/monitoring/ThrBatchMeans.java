@@ -5,8 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class ThrBatchMeans {
 	protected final LinkedBlockingQueue<Double> unprocessedSamples = new LinkedBlockingQueue<>(); //ExitTimes
-	//public final BatchMeans thr;
-	public final JustMean thr;
+	public final BatchMeans thr;
 	protected final double samplingTime;
 	
 	private double lastBlockBeginsAt = Double.NaN;
@@ -14,7 +13,7 @@ public class ThrBatchMeans {
 	private boolean firstBlock = true;
 	
 	public ThrBatchMeans(int batchSize, double samplingTime) {
-		this.thr = new JustMean();//new BatchMeans(batchSize);
+		this.thr = new BatchMeans(batchSize);
 		this.samplingTime = samplingTime;
 	}
 	
@@ -27,7 +26,6 @@ public class ThrBatchMeans {
 		this.unprocessedSamples.drainTo(newSamples);		
 		//System.out.println("******TBM****** "+newSamples.size());
 		if(newSamples.size() > 0) {
-			/*
 			newSamples.sort(Double::compare);
 			
 			int[] samples = new int[0];
@@ -55,10 +53,7 @@ public class ThrBatchMeans {
 				thr.add(samples[i]/this.samplingTime);
 			}
 			thr.updateStats();
-			*/
-			for(double t:newSamples)
-				this.thr.add(t);
-			this.thr.updateStats();
+			
 		}
 	}
 }
