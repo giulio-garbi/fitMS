@@ -39,12 +39,16 @@ public class ThrBatchMeans {
 				firstBlock = false;
 			} else {
 				samples = new int[(int)((newSamples.get(newSamples.size()-1)-lastBlockBeginsAt)/this.samplingTime)+1];
-				samples[0] = lastBlockSamples;
-				for(double t:newSamples) {
-					samples[Math.max((int)((t-lastBlockBeginsAt)/this.samplingTime),0)]++;
+				if(samples.length == 0) {
+					lastBlockSamples += newSamples.size();
+				} else {
+					samples[0] = lastBlockSamples;
+					for(double t:newSamples) {
+						samples[Math.max((int)((t-lastBlockBeginsAt)/this.samplingTime),0)]++;
+					}
+					lastBlockBeginsAt += this.samplingTime*(samples.length-1);
+					lastBlockSamples = samples[samples.length-1];
 				}
-				lastBlockBeginsAt += this.samplingTime*(samples.length-1);
-				lastBlockSamples = samples[samples.length-1];
 			}
 			
 			//System.out.println("******nSlots****** "+samples.length);
